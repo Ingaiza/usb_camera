@@ -81,7 +81,7 @@ private:
         camera_info.width = width;
         camera_info.height = height;
 
-        // Assuming a pinhole camera model; fill with dummy calibration data for testing
+        // using arbitrary values ,load calibration data for actual configuration
         camera_info.k = {
             static_cast<double>(width), 0.0, static_cast<double>(width) / 2.0,
             0.0, static_cast<double>(height), static_cast<double>(height) / 2.0,
@@ -94,7 +94,7 @@ private:
             0.0, 0.0, 1.0, 0.0
         };  // Projection matrix
 
-        // For real applications, you should load actual calibration data (K, P matrices, etc.)
+        //Use actual calibration data (K, P matrices, etc.) for your camera
         return camera_info;
     }
 
