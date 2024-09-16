@@ -9,11 +9,11 @@ class stereonode : public rclcpp::Node
 public:
     stereonode() : Node("stereonode") , stop_thread_(false)
     {
-        stereo_subscription = this->create_subscription<sensor_msgs::msg::Image>("/camera/image_raw", 10, std::bind(&stereonode::image_callback, this, std::placeholders::_1));
-        left_img_pub = this->create_publisher<sensor_msgs::msg::Image>("/stereo/left/image_raw", 10);
-        right_img_pub = this->create_publisher<sensor_msgs::msg::Image>("/stereo/right/image_raw", 10);
-        left_img_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("/stereo/left/camera_info", 10);
-        right_img_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("/stereo/right/camera_info", 10);
+        stereo_subscription = this->create_subscription<sensor_msgs::msg::Image>("/camera/image_raw", 1, std::bind(&stereonode::image_callback, this, std::placeholders::_1));
+        left_img_pub = this->create_publisher<sensor_msgs::msg::Image>("/stereo/left/image_raw", 1);
+        right_img_pub = this->create_publisher<sensor_msgs::msg::Image>("/stereo/right/image_raw", 1);
+        left_img_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("/stereo/left/camera_info", 1);
+        right_img_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("/stereo/right/camera_info", 1);
 
         processing_thread_ = std::thread(&stereonode::stereo_callback, this);
         RCLCPP_INFO(this->get_logger(), "Stereo publisher initializing");
