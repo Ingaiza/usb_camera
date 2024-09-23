@@ -124,7 +124,7 @@ class stereonode : public rclcpp::Node
                 auto left_camera_info = create_camera_info(msg->header, 1280, 720);
 
                 // Publish the camera info
-                left_img_info->publish(left_camera_info);
+                //left_img_info->publish(left_camera_info);
             }
             else
             {
@@ -191,7 +191,7 @@ class stereonode : public rclcpp::Node
                 auto right_camera_info = create_camera_info(msg->header, 1280, 720);
 
                 // Publish the camera info
-                right_img_info->publish(right_camera_info);
+                //right_img_info->publish(right_camera_info);
             }
             else
             {
