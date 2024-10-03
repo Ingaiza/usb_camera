@@ -16,6 +16,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(camera_info_manager REQUIRED)
 find_package(cv_bridge REQUIRED)
+find_package(yaml-cpp REQUIRED)
 pkg_check_modules(libcamera REQUIRED libcamera>=0.1)
 
 # library with common utility functions for type conversions
@@ -62,7 +63,13 @@ ament_target_dependencies(stereonode
   "sensor_msgs"
   "cv_bridge"
 )
-target_link_libraries(stereonode ${OpenCV_LIBS})
+target_link_libraries(stereonode 
+    ${OpenCV_LIBS}
+    ${YAML_CPP_LIBRARIES} )
+
+target_include_directories(stereonode PUBLIC
+    ${YAML_CPP_INCLUDE_DIRS} 
+                          )
 
 install(TARGETS
   camera_component

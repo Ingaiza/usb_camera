@@ -3,6 +3,7 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <opencv2/opencv.hpp>
+#include <yaml-cpp/yaml.h>
 
 
 class stereonode : public rclcpp::Node 
@@ -34,8 +35,19 @@ class stereonode : public rclcpp::Node
             std::bind(&stereonode::right_callback,this),
             callback_group1);
 
+            declare_parameter("left_calib_file", "");
+            declare_parameter("right_calib_file", "");
+
+            std::string left_calib_file = get_parameter("left_calib_file").as_string();
+            std::string right_calib_file = get_parameter("right_calib_file").as_string();
+
+            left_camera_info_ = loadCalibrationFile(left_calib_file);
+            right_camera_info_ = loadCalibrationFile(right_calib_file);
+
             RCLCPP_INFO(this->get_logger(), "Stereo publisher initializing");
         }
+
+    
 
     private:
     
@@ -121,16 +133,19 @@ class stereonode : public rclcpp::Node
                 RCLCPP_WARN(this->get_logger(), "Left Image has been published");
 
                 // Create and publish CameraInfo messages for left image
-                auto left_camera_info = create_camera_info(msg->header, 1280, 720);
+                sensor_msgs::msg::CameraInfo left_info = left_camera_info_;
+                left_info.header = msg->header;
+                left_info.header.frame_id = "left_camera_frame";
+                //auto left_camera_info = create_camera_info(msg->header, 1280, 720);
 
                 // Publish the camera info
-                //left_img_info->publish(left_camera_info);
+                left_img_info->publish(left_info);
             }
             else
             {
                 // No image to process, sleep for a short time
                 RCLCPP_WARN(this->get_logger(),"NO IMAGE");
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                //std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }    
 
         }
@@ -186,43 +201,54 @@ class stereonode : public rclcpp::Node
                 right_img_pub->publish(*right_msg);
                 RCLCPP_WARN(this->get_logger(), "Right Image has been published");
 
-                // Create and publish CameraInfo messages forright image
-                /*COMMENTED OUT THIS PART TO TEST FIRST*/
-                auto right_camera_info = create_camera_info(msg->header, 1280, 720);
-
+                // Create and publish CameraInfo messages for right image
+                sensor_msgs::msg::CameraInfo right_info = right_camera_info_;
+                right_info.header = msg->header;
+                right_info.header.frame_id = "right_camera_frame";               
+                
                 // Publish the camera info
-                //right_img_info->publish(right_camera_info);
+                right_img_info->publish(right_info);
             }
             else
             {
                 // No image to process, sleep for a short time
                 RCLCPP_WARN(this->get_logger(),"NO IMAGE");
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                //std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
 
         }
 
-        sensor_msgs::msg::CameraInfo create_camera_info(const std_msgs::msg::Header& header, int width, int height)
+        sensor_msgs::msg::CameraInfo loadCalibrationFile(const std::string& file_path)
         {
             sensor_msgs::msg::CameraInfo camera_info;
-            camera_info.header = header;
-            camera_info.width = width;
-            camera_info.height = height;
 
-            // Assuming arbitrary calibration data for testing
-            camera_info.k = {
-                static_cast<double>(width), 0.0, static_cast<double>(width) / 2.0,
-                0.0, static_cast<double>(height), static_cast<double>(height) / 2.0,
-                0.0, 0.0, 1.0
-            };  // Intrinsic matrix
+            try 
+            {
+                YAML::Node config = YAML::LoadFile(file_path);
 
-            camera_info.p = {
-                static_cast<double>(width), 0.0, static_cast<double>(width) / 2.0, 0.0,
-                0.0, static_cast<double>(height), static_cast<double>(height) / 2.0, 0.0,
-                0.0, 0.0, 1.0, 0.0
-            };  // Projection matrix
+                camera_info.width = config["image_width"].as<int>();
+                camera_info.height = config["image_height"].as<int>();
 
-            // Load actual calibration data (K, P matrices, etc.) for actual measurements
+                auto k_vec = config["camera_matrix"]["data"].as<std::vector<double>>();
+                std::copy_n(k_vec.begin(), 9, camera_info.k.begin());
+
+                camera_info.d = config["distortion_coefficients"]["data"].as<std::vector<double>>();
+
+                auto r_vec = config["rectification_matrix"]["data"].as<std::vector<double>>();
+                std::copy_n(r_vec.begin(), 9, camera_info.r.begin());
+
+                auto p_vec = config["projection_matrix"]["data"].as<std::vector<double>>();
+                std::copy_n(p_vec.begin(), 12, camera_info.p.begin());
+
+                camera_info.distortion_model = config["distortion_model"].as<std::string>();
+
+                RCLCPP_INFO(this->get_logger(), "Loaded calibration file: %s", file_path.c_str());
+            } 
+            catch (const YAML::Exception& e) 
+            {
+                RCLCPP_ERROR(this->get_logger(), "Error loading calibration file: %s", e.what());
+            }
+
             return camera_info;
         }
 
@@ -240,6 +266,10 @@ class stereonode : public rclcpp::Node
         rclcpp::CallbackGroup::SharedPtr callback_group1;
         rclcpp::CallbackGroup::SharedPtr callback_group2;
         rclcpp::CallbackGroup::SharedPtr callback_group3;
+        sensor_msgs::msg::CameraInfo left_camera_info_;
+        sensor_msgs::msg::CameraInfo right_camera_info_;
+        // std::thread camerainfo_thread;
+        // std::atomic<bool> stop_thread_;
 
 };
 
