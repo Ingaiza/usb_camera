@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <let name="left_config" value="$(find-pkg-share camera_ros)/config/left.yaml" />
+    <let name="right_config" value="$(find-pkg-share camera_ros)/config/right.yaml" />
+
+    <node pkg="camera_ros" exec="camera_node" name="camera_component" output="screen"/>
+    <node pkg="camera_ros" exec="stereonode" name="stereonode" output="screen">
+        <param name="left_calib_file" value="-d $(var left_config)" />
+        <param name="right_calib_file" value="-d $(var right_config)" />
+    </node>
+
+</launch>
