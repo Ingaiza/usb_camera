@@ -22,8 +22,8 @@ class stereonode : public rclcpp::Node
             std::bind(&stereonode::image_callback, this,std::placeholders::_1),
             options);
 
-            left_img_pub = this->create_publisher<sensor_msgs::msg::Image>("/stereo/left/image_raw", 1);
-            right_img_pub = this->create_publisher<sensor_msgs::msg::Image>("/stereo/right/image_raw", 1);
+            left_img_pub = this->create_publisher<sensor_msgs::msg::Image>("/stereo/left/image", 1);
+            right_img_pub = this->create_publisher<sensor_msgs::msg::Image>("/stereo/right/image", 1);
             left_img_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("/stereo/left/camera_info", 1);
             right_img_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("/stereo/right/camera_info", 1);
 
